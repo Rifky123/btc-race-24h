@@ -18,8 +18,8 @@ randomness, so two executions on the same bars produce the same orders.
 - **Race mode: staged dip-buyer.** Buy a first tranche (60% of cash) into a confirmed flush:
   a drawdown of at least 180 bps against the 60-bar rolling high, with 3-bar momentum back
   above -8 bps (no falling knives) and 30-bar momentum above -40 bps. A deeper flush
-  (240 bps) arms a second tranche with the rest of the cash. Exits: take profit at +160 bps
-  over the average entry (cost basis, fees included), a 45 bps trailing stop from the peak
+  (240 bps) arms a second tranche with the rest of the cash. Exits: take profit at +450 bps
+  over the average entry (cost basis, fees included), a 60 bps trailing stop from the peak
   close since entry, a hard stop at -150 bps, and a pool-depth collapse: when the Orca
   Whirlpool's open depth falls more than 6% under its 15-bar peak while 3-bar momentum is
   still negative — liquidity pulled ahead of a dump — the position is sold immediately.

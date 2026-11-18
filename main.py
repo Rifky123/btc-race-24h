@@ -44,8 +44,8 @@ STAB_BPS = -8           # 3-bar momentum must sit above this (no falling knives)
 TREND_BPS = -40         # 30-bar momentum floor for any entry
 STAGE1_NUM = 6          # first tranche: 6/10 of cash
 STAGE1_DEN = 10
-TP_BPS = 160            # take profit over the average entry
-TRAIL_BPS = 45          # trailing stop from the peak close since entry
+TP_BPS = 450            # take profit over the average entry (banks a full bounce)
+TRAIL_BPS = 60          # trailing stop from the peak close since entry
 SL_BPS = 150            # hard stop under the average entry
 DEPTH_DD_PCT_NUM = -60  # depth-collapse exit: depth under 40% ... (per mille of the 15-bar peak)
 DEPTH_DD_PCT_DEN = 10   # ... expressed as -60/10 = -6.0% (with 3-bar momentum still negative)
