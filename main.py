@@ -9,10 +9,12 @@ path -- the live race window -- the same bot trades a staged dip-buyer instead:
 buy a tranche into confirmed flushes against a rolling high, add a second tranche
 on a deeper flush, and bank the bounce; a pool-depth collapse (liquidity pulled
 from the Orca Whirlpool ahead of a dump) is an immediate exit, as are a take
-profit, a trailing stop and a hard stop on the average entry. A tiny forced buy
-near the end guarantees the at-least-one-trade guardrail on a day too quiet to
-trigger anything. Everything is integer math over the batch data: no clock, no
-randomness, no I/O, so two executions on the same bars produce the same orders.
+  profit, a trailing stop and a hard stop on the average entry; a severe liquidity
+pull (depth under 9% of its 15-bar peak) exits on its own, momentum aside. A tiny
+forced buy near the end guarantees the at-least-one-trade guardrail on a day too
+quiet to trigger anything. Everything is integer math over the batch data: no
+clock, no randomness, no I/O, so two executions on the same bars produce the same
+orders.
 
 Protocol: agent-fun/bars-replay/v1, via the kit's Python shim (vendor/makefun_bars.py).
 """
@@ -46,7 +48,9 @@ TP_BPS = 160            # take profit over the average entry
 TRAIL_BPS = 45          # trailing stop from the peak close since entry
 SL_BPS = 150            # hard stop under the average entry
 DEPTH_DD_PCT_NUM = -60  # depth-collapse exit: depth under 40% ... (per mille of the 15-bar peak)
-DEPTH_DD_PCT_DEN = 10   # ... expressed as -60/10 = -6.0%
+DEPTH_DD_PCT_DEN = 10   # ... expressed as -60/10 = -6.0% (with 3-bar momentum still negative)
+DEPTH_DD_HARD_NUM = -90  # severe liquidity pull: depth under 9% of the 15-bar peak exits alone
+DEPTH_DD_HARD_DEN = 10
 COOL_BARS = 15          # bars to stand aside after an exit
 FORCE_SEQ = 1380        # guardrail trade if nothing filled by here
 FORCE_NUM = 1           # forced trade: 1/20 of cash
@@ -137,8 +141,9 @@ class Bot:
             if self.own_fills == 0 and seq >= FORCE_SEQ:
                 notional = max(st.cash * FORCE_NUM // FORCE_DEN, MIN_NOTIONAL)
                 if st.cash >= notional:
+                    # wide cap: the guardrail trade must land even on an open that gapped
                     out.append({"side": "buy", "symbol": SYMBOL, "notional_quote_units": notional,
-                                "max_slippage_bps": 500})
+                                "max_slippage_bps": 1000})
                 return out
             if n < 31:
                 return out
@@ -178,6 +183,9 @@ class Bot:
         if self.peak_close and close * BPS < self.peak_close * (BPS - TRAIL_BPS):
             exit_now = True
         if depth_dd_perm < DEPTH_DD_PCT_NUM and mom3 < 0:
+            exit_now = True
+        if depth_dd_perm < DEPTH_DD_HARD_NUM:
+            # the pool's in-range liquidity collapsed hard: leave before the dump lands
             exit_now = True
         if exit_now:
             self.cool = COOL_BARS
